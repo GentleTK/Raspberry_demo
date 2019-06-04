@@ -1,2 +1,2 @@
 # Raspberry_demo
-For test raspberrypi demo
+For testing raspberrypi demo
