@@ -66,6 +66,6 @@ csvfile = open('GPS_Info.csv','w')
 nodes = csv.writer(csvfile)
 nodes.writerow(['lng','lat'])
 data=[]
-data.append([loc[0],loc[1]])
+data.append(['%.4f' % loc[0],'%.4f' % loc[1]])
 nodes.writerow(data)
 csvfile.close()
