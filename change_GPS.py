@@ -3,12 +3,12 @@ import string
 import time
 import math
  
-#系数常量
+#System Value
 a = 6378245.0
 ee = 0.00669342162296594323
 x_pi = 3.14159265358979324 * 3000.0 / 180.0;
  
-#转换经度
+#change Longitude
 def transformLat(lat,lon):
     ret = -100.0 + 2.0 * lat + 3.0 * lon + 0.2 * lon * lon + 0.1 * lat * lon +0.2 * math.sqrt(abs(lat))
     ret += (20.0 * math.sin(6.0 * lat * math.pi) + 20.0 * math.sin(2.0 * lat * math.pi)) * 2.0 / 3.0
@@ -16,7 +16,7 @@ def transformLat(lat,lon):
     ret += (160.0 * math.sin(lon / 12.0 * math.pi) + 320 * math.sin(lon * math.pi  / 30.0)) * 2.0 / 3.0
     return ret
  
-#转换纬度
+#change Latitude
 def transformLon(lat,lon):
     ret = 300.0 + lat + 2.0 * lon + 0.1 * lat * lat + 0.1 * lat * lon + 0.1 * math.sqrt(abs(lat))
     ret += (20.0 * math.sin(6.0 * lat * math.pi) + 20.0 * math.sin(2.0 * lat * math.pi)) * 2.0 / 3.0
@@ -55,37 +55,17 @@ def wgs2bd(lat,lon):
     wgs_to_gcj = wgs2gcj(lat,lon)
     gcj_to_bd = gcj2bd(wgs_to_gcj[0], wgs_to_gcj[1])
     return gcj_to_bd;
- 
-for i in range (3,4):
-    n = str('2017040'+ str(i)+'.csv')
-    m = str('2017040' + str(i)+'.csv')
-    
-    csvfile = open(m,'w',encoding='UTF-8',newline='')
-    nodes = csv.writer(csvfile)
-#   nodes.writerow(['md5','content','phone','conntime','recitime','lng','lat'])
-    nodes.writerow(['lng','lat'])
-#My GPS	coordinate
-#N 27.8505，E 112.926
-	nodes.writerow(['112.926','27.8505'])
-	
-#   nodes.writerow(['117.187','39.0998'])
-#   nodes.writerow(['117.184','39.0996'])
-    l=[]
-    with open(n,newline='',encoding='UTF-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row['lng'] == 'lng':
-                continue
-            else: 
- 
-#                                  
-                y=float(row['lng'])
- 
-                x=float(row['lat']) 
- 
-                loc=wgs2bd(x,y)
- 
-                l.append([loc[0],loc[1]])
- 
-    nodes.writerows(l)
-    csvfile.close()
+#y = Longitude
+#x = Latitude
+y = 112.926
+x = 27.8505
+#change GPS coordinate
+loc=wgs2bd(x,y)
+#write GPS Information to csvfile
+csvfile = open('GPS_Info.csv','w')
+nodes = csv.writer(csvfile)
+nodes.writerow(['lng','lat'])
+data=[]
+data.append([loc[0],loc[1]])
+nodes.writerow(data)
+csvfile.close()

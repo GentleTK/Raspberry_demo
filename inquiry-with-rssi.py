@@ -174,27 +174,27 @@ if mode != 1:
     if result != 0:
         print("error while setting inquiry mode")
     print("result: %d" % result)
-while True:
-    device_inquiry_with_with_rssi(sock)
-    report = session.next()
-    if report['class'] == 'TPV':
-        print 'Latitude:  ',report.lat
-        print 'Longitude: ',report.lon
-#try:
-#    while True:
-#        device_inquiry_with_with_rssi(sock)
-#        report = session.next()
-#        if report['class'] == 'VERSION':
-#            print 'connect GPS successfully'
-#        if report['class'] == 'DEVICES':
-#            print 'searching satellite...'
-#        if report['class'] == 'WATCH':
-#            print 'search satellite successfully'
-#        if report['class'] == 'TPV':
-#            print 'Latitude:  ',report.lat
-#            print 'Longitude: ',report.lon
-#        if report['class'] == 'SKY':
-#            print 'satellites NO.',len(report.satellites)
-#        time.sleep(3)
-#except StopIteration:
-#            print "GPSD has teminated"
+#while True:
+#    device_inquiry_with_with_rssi(sock)
+#    report = session.next()
+#    if report['class'] == 'TPV':
+#        print 'Latitude:  ',report.lat
+#        print 'Longitude: ',report.lon
+try:
+    while True:
+        device_inquiry_with_with_rssi(sock)
+        report = session.next()
+        if report['class'] == 'VERSION':
+            print 'connect GPS successfully'
+        if report['class'] == 'DEVICES':
+            print 'searching satellite...'
+        if report['class'] == 'WATCH':
+            print 'search satellite successfully'
+        if report['class'] == 'TPV':
+            print 'Latitude:  ',report.lat
+            print 'Longitude: ',report.lon
+        if report['class'] == 'SKY':
+            print 'satellites NO.',len(report.satellites)
+        time.sleep(3)
+except StopIteration:
+            print "GPSD has teminated"
