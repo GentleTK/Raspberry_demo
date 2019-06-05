@@ -1,11 +1,21 @@
 from gps import *
 import os
 import sys
+import csv
 import struct
 import bluetooth._bluetooth as bluez
 import bluetooth
 import RPi.GPIO as GPIO
 import time
+import math
+
+#System Value
+a = 6378245.0
+ee = 0.00669342162296594323
+x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+#Bluetooth Device Address
+#dev_addr = "7C:03:AB:43:ED:D2"
+dev_addr = "48:3C:0C:9D:2E:02"
 #GPIO Set
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -14,10 +24,10 @@ GPIO.output(23, GPIO.LOW)
 #GPS session Set
 session = gps(mode=WATCH_ENABLE)
 #Print Devices Addr and Name
-nearby_devices = bluetooth.discover_devices(lookup_names=True)
-print(" found %d devices" % len(nearby_devices))
-for addr, name in nearby_devices:
-    print("  %s - %s" % (addr, name))
+#nearby_devices = bluetooth.discover_devices(lookup_names=True)
+#print(" found %d devices" % len(nearby_devices))
+#for addr, name in nearby_devices:
+#    print("  %s - %s" % (addr, name))
 
 def printpacket(pkt):
     for c in pkt:
@@ -112,16 +122,17 @@ def device_inquiry_with_with_rssi(sock):
                 rssi = bluetooth.byte_to_signed_int(
                         bluetooth.get_byte(pkt[1+13*nrsp+i]))
                 results.append( ( addr, rssi ) )
-                power = (abs(rssi)-59)/(10*2.0)
-                meter = pow(10, power)
-                print("[%s] RSSI: [%d]" % (addr, rssi))
-                print("Distance: [%.2f]" % meter)
-                if meter > 0.5:
-                    GPIO.output(23, GPIO.HIGH)
-                    time.sleep(1)
-                    GPIO.output(23, GPIO.LOW)
-                    time.sleep(1)
-                #GPIO.output(18, GPIO.HIGH)
+                #Compare device addr is connected device
+                if addr == dev_addr:
+                    power = (abs(rssi)-59)/(10*2.0)
+                    meter = pow(10, power)
+                    print("[%s] RSSI: [%d]" % (addr, rssi))
+                    print("Distance: [%.2f]" % meter)
+                    if meter > 2:
+                        GPIO.output(23, GPIO.HIGH)
+                        time.sleep(1)
+                        GPIO.output(23, GPIO.LOW)
+                        time.sleep(1)
         elif event == bluez.EVT_INQUIRY_COMPLETE:
             done = True
         elif event == bluez.EVT_CMD_STATUS:
@@ -138,7 +149,7 @@ def device_inquiry_with_with_rssi(sock):
                 results.append( ( addr, -1 ) )
                 print("[%s] (no RRSI)" % addr)
         #else:
-            #print("unrecognized packet type 0x%02x" % ptype)
+        #    print("unrecognized packet type 0x%02x" % ptype)
         #print("event ", event)
         
 
@@ -146,7 +157,53 @@ def device_inquiry_with_with_rssi(sock):
     sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
 
     return results
-
+#change Longitude
+def transformLat(lat,lon):
+    ret = -100.0 + 2.0 * lat + 3.0 * lon + 0.2 * lon * lon + 0.1 * lat * lon +0.2 * math.sqrt(abs(lat))
+    ret += (20.0 * math.sin(6.0 * lat * math.pi) + 20.0 * math.sin(2.0 * lat * math.pi)) * 2.0 / 3.0
+    ret += (20.0 * math.sin(lon * math.pi) + 40.0 * math.sin(lon / 3.0 * math.pi)) * 2.0 / 3.0
+    ret += (160.0 * math.sin(lon / 12.0 * math.pi) + 320 * math.sin(lon * math.pi  / 30.0)) * 2.0 / 3.0
+    return ret
+ 
+#change Latitude
+def transformLon(lat,lon):
+    ret = 300.0 + lat + 2.0 * lon + 0.1 * lat * lat + 0.1 * lat * lon + 0.1 * math.sqrt(abs(lat))
+    ret += (20.0 * math.sin(6.0 * lat * math.pi) + 20.0 * math.sin(2.0 * lat * math.pi)) * 2.0 / 3.0
+    ret += (20.0 * math.sin(lat * math.pi) + 40.0 * math.sin(lat / 3.0 * math.pi)) * 2.0 / 3.0
+    ret += (150.0 * math.sin(lat / 12.0 * math.pi) + 300.0 * math.sin(lat / 30.0 * math.pi)) * 2.0 / 3.0
+    return ret
+ 
+#Wgs transform to gcj
+def wgs2gcj(lat,lon):
+    dLat = transformLat(lon - 105.0, lat - 35.0)
+    dLon = transformLon(lon - 105.0, lat - 35.0)
+    radLat = lat / 180.0 * math.pi
+    magic = math.sin(radLat)
+    magic = 1 - ee * magic * magic
+    sqrtMagic = math.sqrt(magic)
+    dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * math.pi)
+    dLon = (dLon * 180.0) / (a / sqrtMagic * math.cos(radLat) * math.pi)
+    mgLat = lat + dLat
+    mgLon = lon + dLon
+    loc=[mgLat,mgLon]
+    return loc
+ 
+#gcj transform to bd2
+def gcj2bd(lat,lon):
+    x=lon
+    y=lat
+    z = math.sqrt(x * x + y * y) + 0.00002 * math.sin(y * x_pi)
+    theta = math.atan2(y, x) + 0.000003 * math.cos(x * x_pi)
+    bd_lon = z * math.cos(theta) + 0.0065
+    bd_lat = z * math.sin(theta) + 0.006
+    bdpoint = [bd_lon,bd_lat]
+    return bdpoint
+ 
+#wgs transform to bd
+def wgs2bd(lat,lon):
+    wgs_to_gcj = wgs2gcj(lat,lon)
+    gcj_to_bd = gcj2bd(wgs_to_gcj[0], wgs_to_gcj[1])
+    return gcj_to_bd;
 dev_id = 0
 try:
     sock = bluez.hci_open_dev(dev_id)
@@ -174,12 +231,25 @@ if mode != 1:
     if result != 0:
         print("error while setting inquiry mode")
     print("result: %d" % result)
+
 #while True:
 #    device_inquiry_with_with_rssi(sock)
 #    report = session.next()
+#    y = 112.926
+#    x = 27.8505
 #    if report['class'] == 'TPV':
-#        print 'Latitude:  ',report.lat
-#        print 'Longitude: ',report.lon
+#        y = report.lon
+#        x = report.lat
+#change GPS coordinate
+#        loc=wgs2bd(x,y)
+#write GPS Information to csvfile
+#        csvfile = open('/home/pi/GPS_Info.csv','w')
+#        nodes = csv.writer(csvfile)
+#        nodes.writerow(['Longitude','Latitude'])
+#        data=[]
+#        data.append(['%.4f' % loc[0],'%.4f' % loc[1]])
+#        nodes.writerow(data)
+#        csvfile.close()
 try:
     while True:
         device_inquiry_with_with_rssi(sock)
@@ -189,12 +259,25 @@ try:
         if report['class'] == 'DEVICES':
             print 'searching satellite...'
         if report['class'] == 'WATCH':
-            print 'search satellite successfully'
+             print 'search satellite successfully'
+#change GPS coordinate
         if report['class'] == 'TPV':
-            print 'Latitude:  ',report.lat
-            print 'Longitude: ',report.lon
+            y = report.lon
+            x = report.lat
+#change GPS coordinate
+            loc=wgs2bd(x,y)
+#write GPS Information to csvfile
+            csvfile = open('GPS_Info.csv','w')
+            nodes = csv.writer(csvfile)
+            nodes.writerow(['lng','lat'])
+            data=[]
+            data.append(['%.4f' % loc[0],'%.4f' % loc[1]])
+            nodes.writerow(data)
+            csvfile.close()
+
         if report['class'] == 'SKY':
             print 'satellites NO.',len(report.satellites)
+
         time.sleep(3)
 except StopIteration:
-            print "GPSD has teminated"
+           print "GPSD has teminated"
