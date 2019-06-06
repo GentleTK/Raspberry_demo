@@ -21,8 +21,11 @@ dev_addr = "7C:03:AB:43:ED:D2"
 #GPIO Set
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
+#Buzzer warning
 GPIO.setup(23, GPIO.OUT)
 GPIO.output(23, GPIO.LOW)
+#Web GPIO Control
+GPIO.setup(4, GPIO.IN)
 #GPS session Set
 session = gps(mode=WATCH_ENABLE)
 #Print Devices Addr and Name
@@ -259,6 +262,10 @@ if mode != 1:
 #try:
 while True:
     device_inquiry_with_with_rssi(sock)
+    #Web GPIO Control
+    if GPIO.input(4) == 0:
+        yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
+        yag.send(to = ['17352623503@163.com'],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
 #        if report['class'] == 'VERSION':
 #            print 'connect GPS successfully'
 #        if report['class'] == 'DEVICES':
