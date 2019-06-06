@@ -14,9 +14,10 @@ import math
 a = 6378245.0
 ee = 0.00669342162296594323
 x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+send_flag = 0
 #Bluetooth Device Address
-#dev_addr = "7C:03:AB:43:ED:D2"
-dev_addr = "48:3C:0C:9D:2E:02"
+dev_addr = "7C:03:AB:43:ED:D2"
+#dev_addr = "48:3C:0C:9D:2E:02"
 #GPIO Set
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -30,6 +31,7 @@ session = gps(mode=WATCH_ENABLE)
 #for addr, name in nearby_devices:
 #    print("  %s - %s" % (addr, name))
 
+#Bluetooth range distance module
 def printpacket(pkt):
     for c in pkt:
         sys.stdout.write("%02x " % struct.unpack("B",c)[0])
@@ -130,13 +132,32 @@ def device_inquiry_with_with_rssi(sock):
                     print("[%s] RSSI: [%d]" % (addr, rssi))
                     print("Distance: [%.2f]" % meter)
                     if meter > 2:
+                        #change GPS coordinate
+                        #report = session.next()
+                        #if report['class'] == 'TPV':
+                        #    y = report.lon
+                        #    x = report.lat
+                        y = 112.926
+                        x = 27.8505
+                        #change GPS coordinate
+                        loc=wgs2bd(x,y)
+                        #write GPS Information to csvfile
+                        csvfile = open('GPS_Info.csv','w')
+                        nodes = csv.writer(csvfile)
+                        nodes.writerow(['lng','lat'])
+                        data=[]
+                        data.append(['%.4f' % loc[0],'%.4f' % loc[1]])
+                        nodes.writerow(data)
+                        csvfile.close()
+                        #Send GPS Info E-mail
+                        yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
+                        yag.send(to = ['17352623503@163.com'],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
+                        #buzzer warning
                         GPIO.output(23, GPIO.HIGH)
                         time.sleep(1)
                         GPIO.output(23, GPIO.LOW)
                         time.sleep(1)
-                        #Send GPS Info E-mail
-                        yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
-                        yag.send(to = ['17352623503@163.com'],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
+                                                                       
         elif event == bluez.EVT_INQUIRY_COMPLETE:
             done = True
         elif event == bluez.EVT_CMD_STATUS:
@@ -156,11 +177,11 @@ def device_inquiry_with_with_rssi(sock):
         #    print("unrecognized packet type 0x%02x" % ptype)
         #print("event ", event)
         
-
     # restore old filter
     sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
 
     return results
+#GPS Coordinate Change module
 #change Longitude
 def transformLat(lat,lon):
     ret = -100.0 + 2.0 * lat + 3.0 * lon + 0.2 * lon * lon + 0.1 * lat * lon +0.2 * math.sqrt(abs(lat))
@@ -235,53 +256,17 @@ if mode != 1:
     if result != 0:
         print("error while setting inquiry mode")
     print("result: %d" % result)
-
-#while True:
-#    device_inquiry_with_with_rssi(sock)
-#    report = session.next()
-#    y = 112.926
-#    x = 27.8505
-#    if report['class'] == 'TPV':
-#        y = report.lon
-#        x = report.lat
-#change GPS coordinate
-#        loc=wgs2bd(x,y)
-#write GPS Information to csvfile
-#        csvfile = open('/home/pi/GPS_Info.csv','w')
-#        nodes = csv.writer(csvfile)
-#        nodes.writerow(['Longitude','Latitude'])
-#        data=[]
-#        data.append(['%.4f' % loc[0],'%.4f' % loc[1]])
-#        nodes.writerow(data)
-#        csvfile.close()
-try:
-    while True:
-        device_inquiry_with_with_rssi(sock)
-        report = session.next()
-        if report['class'] == 'VERSION':
-            print 'connect GPS successfully'
-        if report['class'] == 'DEVICES':
-            print 'searching satellite...'
-        if report['class'] == 'WATCH':
-             print 'search satellite successfully'
-#change GPS coordinate
-        if report['class'] == 'TPV':
-            y = report.lon
-            x = report.lat
-#change GPS coordinate
-            loc=wgs2bd(x,y)
-#write GPS Information to csvfile
-            csvfile = open('GPS_Info.csv','w')
-            nodes = csv.writer(csvfile)
-            nodes.writerow(['lng','lat'])
-            data=[]
-            data.append(['%.4f' % loc[0],'%.4f' % loc[1]])
-            nodes.writerow(data)
-            csvfile.close()
-
-        if report['class'] == 'SKY':
-            print 'satellites NO.',len(report.satellites)
-
-        time.sleep(3)
-except StopIteration:
-           print "GPSD has teminated"
+#try:
+while True:
+    device_inquiry_with_with_rssi(sock)
+#        if report['class'] == 'VERSION':
+#            print 'connect GPS successfully'
+#        if report['class'] == 'DEVICES':
+#            print 'searching satellite...'
+#        if report['class'] == 'WATCH':
+#             print 'search satellite successfully'
+#        if report['class'] == 'SKY':
+#            print 'satellites NO.',len(report.satellites)
+#        time.sleep(3)
+#except StopIteration:
+#           print "GPSD has teminated"
