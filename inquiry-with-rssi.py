@@ -3,6 +3,7 @@ import os
 import sys
 import csv
 import struct
+import yagmail
 import bluetooth._bluetooth as bluez
 import bluetooth
 import RPi.GPIO as GPIO
@@ -133,6 +134,9 @@ def device_inquiry_with_with_rssi(sock):
                         time.sleep(1)
                         GPIO.output(23, GPIO.LOW)
                         time.sleep(1)
+                        #Send GPS Info E-mail
+                        yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
+                        yag.send(to = ['17352623503@163.com'],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
         elif event == bluez.EVT_INQUIRY_COMPLETE:
             done = True
         elif event == bluez.EVT_CMD_STATUS:

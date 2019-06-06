@@ -1,3 +1,4 @@
-sudo python /home/pi/Raspberry_demo/inquiry-with-rssi.py
-sleep 1m
-echo "GPS Coordinate" | mutt 17352623503@163.com -s "GPS Info" -a /home/pi/GPS_Info.csv
+#run inquiry-with-rssi.py range distance
+#sudo python /home/pi/Raspberry_demo/inquiry-with-rssi.py
+#Test run sendmail.py to send GPS Info E-Mail
+sudo python /home/pi/Raspberry_demo/sendmail.py
