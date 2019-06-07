@@ -142,8 +142,12 @@ def device_inquiry_with_with_rssi(sock):
                         #if report['class'] == 'TPV':
                         #    y = report.lon
                         #    x = report.lat
-                        y = 112.926
-                        x = 27.8505
+						#E601 Coordinate
+                        #y = 112.926
+                        #x = 27.8505
+						#Home Coordinate
+						y = 113.5241
+						x = 26.769
                         #change GPS coordinate
                         loc=wgs2bd(x,y)
                         #write GPS Information to csvfile
