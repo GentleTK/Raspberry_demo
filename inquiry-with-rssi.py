@@ -14,7 +14,9 @@ import math
 a = 6378245.0
 ee = 0.00669342162296594323
 x_pi = 3.14159265358979324 * 3000.0 / 180.0;
-send_flag = 0
+#Add your Mail Address
+mail_addr = '17352623503@163.com'
+#mail_addr = '937890286@qq.com'
 #Bluetooth Device Address
 dev_addr = "7C:03:AB:43:ED:D2"
 #dev_addr = "48:3C:0C:9D:2E:02"
@@ -154,7 +156,7 @@ def device_inquiry_with_with_rssi(sock):
                         csvfile.close()
                         #Send GPS Info E-mail
                         yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
-                        yag.send(to = ['17352623503@163.com'],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
+                        yag.send(to = [mail_addr],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
                         #buzzer warning
                         GPIO.output(23, GPIO.HIGH)
                         time.sleep(1)
@@ -265,7 +267,7 @@ while True:
     #Web GPIO Control
     if GPIO.input(4) == 0:
         yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
-        yag.send(to = ['17352623503@163.com'],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
+        yag.send(to = [mail_addr],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
 #        if report['class'] == 'VERSION':
 #            print 'connect GPS successfully'
 #        if report['class'] == 'DEVICES':
