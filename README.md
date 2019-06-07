@@ -1,2 +1,2 @@
 # Raspberry_demo
-For testing raspberrypi demo
+Bluetooth ranging and alarm of Intelligent luggage based on RaspberryPi
