@@ -9,7 +9,7 @@ message = """
         #allmap{height:500px;width:100%;}
         #r-result{width:100%; font-size:14px;}
     </style>
-    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=S0b7WWbZpGOTHbsekm8Or1jBl27VBSma"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=wgYlWnYQSZ5fN3RdCxYoIF8jT7y1jRLb"></script>
     <title>Map Marking</title>
 </head>
 <body>
