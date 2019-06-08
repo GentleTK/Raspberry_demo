@@ -57,8 +57,12 @@ def wgs2bd(lat,lon):
     return gcj_to_bd;
 #y = Longitude
 #x = Latitude
-y = 112.926
-x = 27.8505
+#E601 Coordinate
+#y = 112.926
+#x = 27.8505
+#Home Coordinate
+y = 113.524
+x = 26.7697
 #change GPS coordinate
 loc=wgs2bd(x,y)
 #write GPS Information to csvfile

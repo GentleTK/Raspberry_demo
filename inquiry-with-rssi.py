@@ -153,7 +153,7 @@ def device_inquiry_with_with_rssi(sock):
                         #write GPS Information to csvfile
                         csvfile = open('GPS_Info.csv','w')
                         nodes = csv.writer(csvfile)
-                        nodes.writerow(['lng','lat'])
+                        nodes.writerow(['Longitude','Latitude'])
                         data=[]
                         data.append(['%.4f' % loc[0],'%.4f' % loc[1]])
                         nodes.writerow(data)
