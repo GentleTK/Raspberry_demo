@@ -1,3 +1,5 @@
+# coding:utf-8
+from bottle import template
 from gps import *
 import os
 import sys
@@ -14,6 +16,8 @@ import math
 a = 6378245.0
 ee = 0.00669342162296594323
 x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+#Add your HTML Filename
+GEN_HTML = "MarkPoint.html"
 #Add your Mail Address
 mail_addr = '17352623503@163.com'
 #mail_addr = '937890286@qq.com'
@@ -136,31 +140,25 @@ def device_inquiry_with_with_rssi(sock):
                     meter = pow(10, power)
                     print("[%s] RSSI: [%d]" % (addr, rssi))
                     print("Distance: [%.2f]" % meter)
-                    if meter > 2:
+                    if meter > 0.5:
                         #change GPS coordinate
                         #report = session.next()
                         #if report['class'] == 'TPV':
                         #    y = report.lon
                         #    x = report.lat
-			#E601's Coordinate
+                        #E601's Coordinate
                         #y = 112.926
                         #x = 27.8505
-			#Home's Coordinate
-			y = 113.5241
-			x = 26.769
+                        #Home's Coordinate
+                        y = 113.5241
+                        x = 26.769
                         #change GPS coordinate
                         loc=wgs2bd(x,y)
-                        #write GPS Information to csvfile
-                        csvfile = open('GPS_Info.csv','w')
-                        nodes = csv.writer(csvfile)
-                        nodes.writerow(['Longitude','Latitude'])
-                        data=[]
-                        data.append(['%.4f' % loc[0],'%.4f' % loc[1]])
-                        nodes.writerow(data)
-                        csvfile.close()
+                        #Generate HTML File
+                        generate(loc[0],loc[1])
                         #Send GPS Info E-mail
                         yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
-                        yag.send(to = [mail_addr],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
+                        yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
                         #buzzer warning
                         GPIO.output(23, GPIO.HIGH)
                         time.sleep(1)
@@ -239,46 +237,47 @@ def wgs2bd(lat,lon):
     gcj_to_bd = gcj2bd(wgs_to_gcj[0], wgs_to_gcj[1])
     return gcj_to_bd;
 #create html
-def create_html():
-    GEN_HTML = "MarkPoint.html"
-    f = open(GEN_HTML,"w")
-    message = """
-    <html>
-    <head>
+def generate(lng, lat):
+    template_demo = """
+<html>
+<head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <style type="text/css">
         body, html{width: 100%;height: 100%;margin:0;font-family:"微软雅黑";}
-	#allmap{height:100%;width:100%;}
+        #allmap{height:100%;width:100%;}
     </style>
     <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=wgYlWnYQSZ5fN3RdCxYoIF8jT7y1jRLb"></script>
     <title>Map Marking</title>
-    </head>
-    <body>
-    <p id="allmap"></p>
-    <script type="text/javascript">
+</head>
+<body>
+    <div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
     // 百度地图API功能
     var map = new BMap.Map("allmap");
+	var lng = {{lng}};
+	var lat = {{lat}};
     map.centerAndZoom(new BMap.Point(116.331398,39.897445),11);
     map.enableScrollWheelZoom(true);
-	 // 用经纬度设置地图中心点
+    
+    // 用经纬度设置地图中心点
     function theLocation(){
-        map.clearOverlays();
-	//GPS to BD Coordinate
-	//var new_point = new BMap.Point(113.5359, 26.7725);
-	var new_point = new BMap.Point(112.9378, 27.8533);
-	//var new_point = new BMap.Point(1ng, lat);
-        var marker = new BMap.Marker(new_point);  // 创建标注
-        map.addOverlay(marker);              // 将标注添加到地图中
-        map.panTo(new_point);      
+		map.clearOverlays();
+		var new_point = new BMap.Point(lng, lat);
+		var marker = new BMap.Marker(new_point);  // 创建标注
+		map.addOverlay(marker);              // 将标注添加到地图中
+		map.panTo(new_point);      
     }
 	document.getElementById("theLocation").innerHTML = theLocation();
-    </script>
-    </body>
-    </html>
-    """
-    f.write(message)
-    f.close()
+</script>
+</html>
+"""
+    html = template(template_demo, lng=lng, lat=lat)
+    with open(GEN_HTML, 'wb') as f:
+        f.write(html.encode('utf-8'))
+
 dev_id = 0
 try:
     sock = bluez.hci_open_dev(dev_id)
@@ -312,7 +311,7 @@ while True:
     #Web GPIO Control
     if GPIO.input(4) == 0:
         yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
-        yag.send(to = [mail_addr],subject = 'GPS Info',contents = ['GPS Coordinate','/home/pi/GPS_Info.csv'])
+        yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
 #        if report['class'] == 'VERSION':
 #            print 'connect GPS successfully'
 #        if report['class'] == 'DEVICES':
