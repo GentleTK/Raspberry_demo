@@ -16,6 +16,8 @@ import math
 a = 6378245.0
 ee = 0.00669342162296594323
 x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+#Control Send Mail
+Send_Flag = 1
 #Add your HTML Filename
 GEN_HTML = "MarkPoint.html"
 #Add your Mail Address
@@ -140,30 +142,33 @@ def device_inquiry_with_with_rssi(sock):
                     meter = pow(10, power)
                     print("[%s] RSSI: [%d]" % (addr, rssi))
                     print("Distance: [%.2f]" % meter)
-                    if meter > 0.5:
-                        #change GPS coordinate
-                        #report = session.next()
-                        #if report['class'] == 'TPV':
-                        #    y = report.lon
-                        #    x = report.lat
-                        #E601's Coordinate
-                        #y = 112.926
-                        #x = 27.8505
-                        #Home's Coordinate
-                        y = 113.5241
-                        x = 26.769
-                        #change GPS coordinate
-                        loc=wgs2bd(x,y)
-                        #Generate HTML File
-                        generate(loc[0],loc[1])
-                        #Send GPS Info E-mail
-                        yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
-                        yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
+                    if meter > 2:
                         #buzzer warning
                         GPIO.output(23, GPIO.HIGH)
                         time.sleep(1)
                         GPIO.output(23, GPIO.LOW)
                         time.sleep(1)
+                        #change GPS coordinate
+                        report = session.next()
+                        if report['class'] == 'TPV':
+                            y = report.lon
+                            x = report.lat
+                            #change GPS coordinate
+                            loc=wgs2bd(x,y)
+                            #Generate HTML File
+                            generate(loc[0],loc[1])
+                        #E601's Coordinate
+                        #y = 112.926
+                        #x = 27.8505
+                        #Home's Coordinate
+                        #y = 113.5241
+                        #x = 26.769
+                        #Send GPS Info E-mail
+                        if os.path.exists('/home/pi/MarkPoint.html'):
+                            if Send_Flag:
+                                yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
+                                yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
+                                Send_Flag = 0
                                                                        
         elif event == bluez.EVT_INQUIRY_COMPLETE:
             done = True
@@ -310,8 +315,13 @@ while True:
     device_inquiry_with_with_rssi(sock)
     #Web GPIO Control
     if GPIO.input(4) == 0:
-        yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
-        yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
+        Send_Flag = 1
+        #Send GPS Map while MarkPoint.html file exist!
+        if os.path.exists('/home/pi/MarkPoint.html'):
+            if Send_Flag:
+                yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
+                yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
+                Send_Flag = 0
 #        if report['class'] == 'VERSION':
 #            print 'connect GPS successfully'
 #        if report['class'] == 'DEVICES':
