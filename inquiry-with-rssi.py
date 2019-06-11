@@ -106,7 +106,8 @@ def write_inquiry_mode(sock, mode):
     if status != 0: return -1
     return 0
 #Get RSSI
-def device_inquiry_with_with_rssi(sock,Send_Flag):
+def device_inquiry_with_with_rssi(sock):
+    global  Send_Flag
     # save current filter
     old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
 
@@ -307,9 +308,10 @@ if mode != 1:
     print("result: %d" % result)
 
 while True:
-    device_inquiry_with_with_rssi(sock,Send_Flag)
+    device_inquiry_with_with_rssi(sock)
     #Web GPIO Control
     if GPIO.input(4) == 0:
+        Send_Flag = 1
         report = session.next()
         if report['class'] == 'TPV':
             #change GPS coordinate
