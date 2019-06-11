@@ -19,12 +19,12 @@ x_pi = 3.14159265358979324 * 3000.0 / 180.0;
 #Add your HTML Filename
 GEN_HTML = "MarkPoint.html"
 #Add your Mail Address
-mail_addr = '17352623503@163.com'
+#mail_addr = '17352623503@163.com'
 #mail_addr = 'lyl18173321050@gmail.com'
-#mail_addr = '937890286@qq.com'
+mail_addr = '937890286@qq.com'
 #Bluetooth Device Address
-dev_addr = "7C:03:AB:43:ED:D2"
-#dev_addr = "48:3C:0C:9D:2E:02"
+#dev_addr = "7C:03:AB:43:ED:D2"
+dev_addr = "48:3C:0C:9D:2E:02"
 #GPIO Set
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -35,6 +35,7 @@ GPIO.output(23, GPIO.LOW)
 GPIO.setup(4, GPIO.IN)
 #GPS session Set
 session = gps(mode=WATCH_ENABLE)
+
 #Print Devices Addr and Name
 #nearby_devices = bluetooth.discover_devices(lookup_names=True)
 #print(" found %d devices" % len(nearby_devices))
@@ -102,7 +103,7 @@ def write_inquiry_mode(sock, mode):
     sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
     if status != 0: return -1
     return 0
-
+#Get RSSI
 def device_inquiry_with_with_rssi(sock):
     # save current filter
     old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
@@ -182,6 +183,7 @@ def device_inquiry_with_with_rssi(sock):
     sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
 
     return results
+	
 #GPS Coordinate Change module
 #change Longitude
 def transformLat(lat,lon):
@@ -230,6 +232,7 @@ def wgs2bd(lat,lon):
     wgs_to_gcj = wgs2gcj(lat,lon)
     gcj_to_bd = gcj2bd(wgs_to_gcj[0], wgs_to_gcj[1])
     return gcj_to_bd;
+	
 #create html
 def generate(lng, lat):
     template_demo = """
@@ -242,7 +245,7 @@ def generate(lng, lat):
         #allmap{height:100%;width:100%;}
     </style>
     <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=wgYlWnYQSZ5fN3RdCxYoIF8jT7y1jRLb"></script>
-    <title>Map Marking</title>
+    <title>智能箱包定位</title>
 </head>
 <body>
     <div id="allmap"></div>
@@ -266,7 +269,6 @@ def generate(lng, lat):
     }
 	document.getElementById("theLocation").innerHTML = theLocation();
 </script>
-</html>
 """
     html = template(template_demo, lng=lng, lat=lat)
     with open(GEN_HTML, 'wb') as f:

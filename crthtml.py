@@ -2,6 +2,8 @@
 from bottle import template
 GEN_HTML = "MarkPoint.html"
 def generate(lng, lat):
+    # 定义想要生成的Html的基本格式
+    # 使用%来插入python代码
     template_demo = """
 <html>
 <head>
@@ -12,7 +14,7 @@ def generate(lng, lat):
         #allmap{height:100%;width:100%;}
     </style>
     <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=wgYlWnYQSZ5fN3RdCxYoIF8jT7y1jRLb"></script>
-    <title>Map Marking</title>
+    <title>智能箱包定位</title>
 </head>
 <body>
     <div id="allmap"></div>
@@ -36,7 +38,6 @@ def generate(lng, lat):
     }
 	document.getElementById("theLocation").innerHTML = theLocation();
 </script>
-</html>
 """
     html = template(template_demo, lng=lng, lat=lat)
     with open(GEN_HTML, 'wb') as f:
