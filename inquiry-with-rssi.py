@@ -273,6 +273,7 @@ def generate(lng, lat):
         f.write(html.encode('utf-8'))
 
 dev_id = 0
+
 try:
     sock = bluez.hci_open_dev(dev_id)
 except:
@@ -310,7 +311,6 @@ while True:
             loc = wgs2bd(report.lat,report.lon)
             #Generate HTML File
             generate(loc[0],loc[1])
-            Send_Flag = 1
             #Send GPS Map while MarkPoint.html file exist!
             if os.path.exists('/home/pi/MarkPoint.html'):
                 yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
