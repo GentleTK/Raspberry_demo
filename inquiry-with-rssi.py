@@ -16,6 +16,8 @@ import math
 a = 6378245.0
 ee = 0.00669342162296594323
 x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+#Set Send Flag
+Send_Flag = 1 
 #Add your HTML Filename
 GEN_HTML = "MarkPoint.html"
 #Add your Mail Address
@@ -156,7 +158,9 @@ def device_inquiry_with_with_rssi(sock):
                             #Generate HTML File
                             generate(loc[0],loc[1])
                             #Send GPS Info E-mail
-                            if os.path.exists('/home/pi/MarkPoint.html'):                               
+                            if os.path.exists('/home/pi/MarkPoint.html') && Send_Flag:
+								global Send_Flag
+								Send_Flag = 0
                                 yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
                                 yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
                                     
@@ -314,6 +318,8 @@ while True:
             #Generate HTML File
             generate(loc[0],loc[1])
             #Send GPS Map while MarkPoint.html file exist!
-            if os.path.exists('/home/pi/MarkPoint.html'):
+            if os.path.exists('/home/pi/MarkPoint.html') && Send_Flag:
+				global Send_Flag
+				Send_Flag = 0
                 yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
                 yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
