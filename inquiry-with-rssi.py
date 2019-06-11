@@ -106,7 +106,7 @@ def write_inquiry_mode(sock, mode):
     if status != 0: return -1
     return 0
 #Get RSSI
-def device_inquiry_with_with_rssi(sock):
+def device_inquiry_with_with_rssi(sock,Send_Flag):
     # save current filter
     old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
 
@@ -159,8 +159,7 @@ def device_inquiry_with_with_rssi(sock):
                             generate(loc[0],loc[1])
                             #Send GPS Info E-mail
                             if os.path.exists('/home/pi/MarkPoint.html') and Send_Flag:
-				global Send_Flag
-				Send_Flag = 0
+                                Send_Flag = 0
                                 yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
                                 yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
                                     
@@ -308,7 +307,7 @@ if mode != 1:
     print("result: %d" % result)
 
 while True:
-    device_inquiry_with_with_rssi(sock)
+    device_inquiry_with_with_rssi(sock,Send_Flag)
     #Web GPIO Control
     if GPIO.input(4) == 0:
         report = session.next()
@@ -319,7 +318,6 @@ while True:
             generate(loc[0],loc[1])
             #Send GPS Map while MarkPoint.html file exist!
             if os.path.exists('/home/pi/MarkPoint.html') and Send_Flag:
-		global Send_Flag
-		Send_Flag = 0
+                Send_Flag = 0
                 yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
                 yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
