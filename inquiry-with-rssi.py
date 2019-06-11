@@ -159,8 +159,8 @@ def device_inquiry_with_with_rssi(sock):
                             generate(loc[0],loc[1])
                             #Send GPS Info E-mail
                             if os.path.exists('/home/pi/MarkPoint.html') and Send_Flag:
-								global Send_Flag
-								Send_Flag = 0
+				global Send_Flag
+				Send_Flag = 0
                                 yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
                                 yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
                                     
@@ -319,7 +319,7 @@ while True:
             generate(loc[0],loc[1])
             #Send GPS Map while MarkPoint.html file exist!
             if os.path.exists('/home/pi/MarkPoint.html') and Send_Flag:
-				global Send_Flag
-				Send_Flag = 0
+		global Send_Flag
+		Send_Flag = 0
                 yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
                 yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
