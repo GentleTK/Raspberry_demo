@@ -17,16 +17,17 @@ a = 6378245.0
 ee = 0.00669342162296594323
 x_pi = 3.14159265358979324 * 3000.0 / 180.0;
 #Set Send Flag
+global Send_Flag
 Send_Flag = 1 
 #Add your HTML Filename
 GEN_HTML = "MarkPoint.html"
 #Add your Mail Address
-#mail_addr = '17352623503@163.com'
+mail_addr = '17352623503@163.com'
 #mail_addr = 'lyl18173321050@gmail.com'
-mail_addr = '937890286@qq.com'
+#mail_addr = '937890286@qq.com'
 #Bluetooth Device Address
-#dev_addr = "7C:03:AB:43:ED:D2"
-dev_addr = "48:3C:0C:9D:2E:02"
+dev_addr = "7C:03:AB:43:ED:D2"
+#dev_addr = "48:3C:0C:9D:2E:02"
 #GPIO Set
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -34,7 +35,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)
 GPIO.output(23, GPIO.LOW)
 #Web GPIO Control
-GPIO.setup(4, GPIO.IN)
+GPIO.setup(4, GPIO.OUT)
 #GPS session Set
 session = gps(mode=WATCH_ENABLE)
 
@@ -108,6 +109,9 @@ def write_inquiry_mode(sock, mode):
 #Get RSSI
 def device_inquiry_with_with_rssi(sock):
     global  Send_Flag
+    #Get GPS Coordinate 
+    report = session.next()
+    
     # save current filter
     old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
 
@@ -145,25 +149,26 @@ def device_inquiry_with_with_rssi(sock):
                     meter = pow(10, power)
                     print("[%s] RSSI: [%d]" % (addr, rssi))
                     print("Distance: [%.2f]" % meter)
-                    if meter > 2:
+                    if meter > 0.5:
                         #buzzer warning
                         GPIO.output(23, GPIO.HIGH)
                         time.sleep(1)
                         GPIO.output(23, GPIO.LOW)
                         time.sleep(1)
                         #change GPS coordinate
-                        report = session.next()
-                        if report['class'] == 'TPV':
-                            #change GPS coordinate
-                            loc = wgs2bd(report.lat,report.lon)
+                        loc = wgs2bd(report.lat,report.lon)
+                        #Send GPS Info E-mail
+                        if os.path.exists('/home/pi/MarkPoint.html'):
+                            Send_Flag = 0
+                        else:
+                            Send_Flag = 1
                             #Generate HTML File
                             generate(loc[0],loc[1])
-                            #Send GPS Info E-mail
-                            if os.path.exists('/home/pi/MarkPoint.html') and Send_Flag:
-                                Send_Flag = 0
-                                yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
-                                yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
-                                    
+                        if Send_Flag:
+                            Send_Flag = 0
+                            yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
+                            yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
+        
         elif event == bluez.EVT_INQUIRY_COMPLETE:
             done = True
         elif event == bluez.EVT_CMD_STATUS:
@@ -306,20 +311,9 @@ if mode != 1:
     if result != 0:
         print("error while setting inquiry mode")
     print("result: %d" % result)
-
 while True:
     device_inquiry_with_with_rssi(sock)
     #Web GPIO Control
-    if GPIO.input(4) == 0:
-        Send_Flag = 1
-        report = session.next()
-        if report['class'] == 'TPV':
-            #change GPS coordinate
-            loc = wgs2bd(report.lat,report.lon)
-            #Generate HTML File
-            generate(loc[0],loc[1])
-            #Send GPS Map while MarkPoint.html file exist!
-            if os.path.exists('/home/pi/MarkPoint.html') and Send_Flag:
-                Send_Flag = 0
-                yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
-                yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
+    if GPIO.input(4) == 1:
+        yag = yagmail.SMTP(user = '1144626145@qq.com', password = 'vrcbsrxuyclyhaji', host = 'smtp.qq.com')
+        yag.send(to = [mail_addr],subject = 'GPS Map',contents = ['GPS Coordinate','/home/pi/MarkPoint.html'])
